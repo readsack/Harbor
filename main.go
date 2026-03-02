@@ -1,15 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"net/http"
+	"log"
+)
 
+const Port string = ":8080"
 
 func main(){
-	fmt.Println("Hello World!")
-	var arr []int
-	arr = append(arr, 1)
-	arr = append(arr, 2)
-	arr = append(arr, 3)
-
-	fmt.Println(arr[1:2])
-
+	log.Println("Server running at localhost"+Port)
+	SetupPostRoutes()
+	http.Handle("/", http.FileServer(http.Dir("./static/")))
+	log.Fatal(http.ListenAndServe(Port, nil))
 }
