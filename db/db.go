@@ -29,7 +29,9 @@ func SetupDB(){
 							id INTEGER PRIMARY KEY,
 							username VARCHAR(100) NOT NULL,
 							email VARCHAR(200) UNIQUE NOT NULL, 
-							pass VARCHAR(200)
+							pass VARCHAR(200),
+							org_id INTEGER,
+							FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE SET NULL
 						)`)
 		if err != nil {
 			_ = tx.Rollback()
