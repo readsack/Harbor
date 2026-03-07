@@ -3,7 +3,7 @@ package db
 import (
 	_ "log"
 	 "database/sql"
-	
+	"crypto/rand"
 )
 
 type User struct{
@@ -12,14 +12,36 @@ type User struct{
 	Username string
 	Password string
 	OrgID sql.NullInt64
+	Key string
 }
 
 func FindUserByEmail(email string) (*User, error) {
 	u := &User{}
 
-	query := `SELECT id, username, email, pass, org_id FROM users WHERE email = ?`
+	query := `SELECT id, username, email, pass, org_id, key FROM users WHERE email = ?`
 
 	err := AppDB.QueryRow(query, email).Scan(
+		&u.ID,
+		&u.Username,
+		&u.Email,
+		&u.Password,
+		&u.OrgID,
+		&u.Key,
+	)
+	//log.Println(err)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func FindUserByKey(key string) (*User, error) {
+	u := &User{}
+
+	query := `SELECT id, username, email, pass, org_id FROM users WHERE key = ?`
+
+	err := AppDB.QueryRow(query, key).Scan(
 		&u.ID,
 		&u.Username,
 		&u.Email,
@@ -45,7 +67,7 @@ func FindUserByID(id int) (*User, error)  {
 }
 
 func CreateUser(u User) error {
-	_, err := AppDB.Exec("INSERT INTO users (username, email, pass) VALUES (?, ?, ?)", u.Username, u.Email, u.Password)
+	_, err := AppDB.Exec("INSERT INTO users (username, email, pass, key) VALUES (?, ?, ?, ?)", u.Username, u.Email, u.Password, rand.Text())
 	return err
 }
 

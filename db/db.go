@@ -31,6 +31,7 @@ func SetupDB(){
 							email VARCHAR(200) UNIQUE NOT NULL, 
 							pass VARCHAR(200),
 							org_id INTEGER,
+							key VARCHAR(200),
 							FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE SET NULL
 						)`)
 		if err != nil {

@@ -6,7 +6,53 @@ import (
 	"harbor/main/db"
 	"log"
 	"database/sql"
+	"os"
+	_ "github.com/joho/godotenv"
 )
+
+import "github.com/golang-jwt/jwt/v5"
+
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+		tokenCookie, err := r.Cookie("JWT")
+		if(err != nil){
+			http.Redirect(w, r, "/login", 303)
+		}
+		tokenString := tokenCookie.Value
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+			secret := os.Getenv("SECRET")
+			key := []byte(secret)
+			return key, nil
+		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+		if err != nil {
+			log.Fatal(err)
+		}
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if (ok && claims["key"] != nil) {
+			next.ServeHTTP(w,r)
+		} else {
+			http.Redirect(w, r, "/login", 303)
+		}
+	})
+}
+
+func createJWT(user_key string) string {
+	var key []byte
+	var t *jwt.Token
+	var s string 
+
+	key = []byte(os.Getenv("SECRET"))
+	t = jwt.NewWithClaims(jwt.SigningMethodHS256, 
+  		jwt.MapClaims{ 
+    		"iss": "my-auth-server", 
+    		"key": user_key,
+  	})
+	s,err := t.SignedString(key)
+	if(err != nil){
+		log.Fatal(err)
+	} 
+	return s
+}
 
 func signUp(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
@@ -28,8 +74,7 @@ func signUp(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 		return
 	}
-	fmt.Fprintln(w, "Success!")
-	
+	w.Write([]byte("Success!"))
 }
 
 func logIn(w http.ResponseWriter, r *http.Request) {
@@ -46,11 +91,17 @@ func logIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if(pass == u.Password){
+		jwtToken := createJWT(u.Key)
+		var c http.Cookie
+		c.Name = "JWT"
+		c.Value = jwtToken
+		http.SetCookie(w, &c)
 		fmt.Fprintln(w, "Logged In Successfully!")
 	} else{
 		fmt.Fprintln(w, "Failed To Login")	
 	}
 	
+
 }
 
 func SetupAuthRoutes(){
@@ -58,3 +109,4 @@ func SetupAuthRoutes(){
 	http.HandleFunc("POST /login", logIn)
 
 }
+
