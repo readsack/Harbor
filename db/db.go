@@ -1,26 +1,28 @@
 package db
 
 import (
-	"log"
-	"database/sql"
 	_ "context"
+	"database/sql"
+	"log"
+
+	_ "github.com/ncruces/go-sqlite3/driver"
+
+	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
-import _ "github.com/ncruces/go-sqlite3/driver"
-import _ "github.com/ncruces/go-sqlite3/embed"
-
 var AppDB *sql.DB
-func InitDB(){
+
+func InitDB() {
 	var err error
 	AppDB, err = sql.Open("sqlite3", "file:app.db")
-	if(err != nil) {
+	if err != nil {
 		log.Fatal(err)
-	} 
-	
+	}
+
 }
 
-func SetupDB(){
-	
+func SetupDB() {
+
 	tx, err := AppDB.Begin()
 	if err != nil {
 		log.Fatal(err)
@@ -69,10 +71,20 @@ func SetupDB(){
 			_ = tx.Rollback()
 			log.Fatal(err)
 		}
+		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS org_inv (
+								user_id INTEGER NOT NULL,
+								org_id INTEGER NOT NULL,
+								key VARCHAR(200),
+								FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+								FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE
+							)`)
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatal(err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		log.Fatal(err)
 	}
-	
-}
 
+}

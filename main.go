@@ -1,28 +1,26 @@
 package main
 
 import (
-	"log"
-	"net/http"
 	"harbor/main/db"
 	"harbor/main/routes"
+	"log"
+	"net/http"
+
 	"github.com/joho/godotenv"
 )
 
 const PORT string = ":8080"
 
-func main(){
-	//u := db.User{Username: "tanisha", Email: "pagal@gmail.com", Password: "pagalhumain"}
-
+func main() {
 	err := godotenv.Load()
-	if(err != nil) {log.Fatal("Couldn't Load .env")}
+	if err != nil {
+		log.Fatal("Couldn't Load .env")
+	}
 
-	log.Println("Server starting At localhost"+PORT)
+	log.Println("Server starting At localhost" + PORT)
 	db.InitDB()
 	db.SetupDB()
 	routes.SetupAuthRoutes()
-	//log.Println(db.AppDB.QueryRow())
+	routes.SetupOrgRoutes()
 	log.Fatal(http.ListenAndServe(PORT, nil))
-	
 }
-
-
