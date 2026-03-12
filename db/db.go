@@ -6,7 +6,6 @@ import (
 	"log"
 
 	_ "github.com/ncruces/go-sqlite3/driver"
-
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
@@ -72,6 +71,7 @@ func SetupDB() {
 			log.Fatal(err)
 		}
 		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS org_inv (
+								id INTEGER PRIMARY KEY,
 								user_id INTEGER NOT NULL,
 								org_id INTEGER NOT NULL,
 								key VARCHAR(200),

@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
@@ -30,11 +27,5 @@ func main() {
 		log.Println(err)
 	}
 	c.Jar.SetCookies(urlObj, []*http.Cookie{ck})
-	encoder := json.NewEncoder().Encode()
-	get_resp, err := c.Post("http://localhost:8080/sendInvite", "application/json", )
-	if err != nil {
-		log.Println(err)
-	}
-	body, err := io.ReadAll(get_resp.Body)
-	log.Println(string(body))
+
 }

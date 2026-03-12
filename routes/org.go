@@ -23,11 +23,30 @@ func sendInvite(w http.ResponseWriter, r *http.Request) {
 		//fmt.Println(r.Body)
 		err := json.NewDecoder(r.Body).Decode(&inv)
 		if err != nil {
-
 		}
-		//fmt.Printf("jsonContent: %v\n", inv)
+		usr, err := db.FindUserByEmail(inv.Email)
+		if err != nil {
+			w.Write([]byte("No user exists having the given email"))
+		} else {
+			v := int(u.OrgID.Int64)
+			db.SendInvite(usr.ID, v)
+		} //fmt.Printf("jsonContent: %v\n", inv)
 		w.Write([]byte("Invite Sent"))
 	}
+}
+
+func closeInvite(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	acc := params.Get("accept")
+	inv_key := params.Get("invite")
+	var accepted bool
+	if acc == "0" {
+		accepted = false
+	} else {
+		accepted = true
+	}
+	db.AcceptOrDeclineInvite(inv_key, accepted)
+	w.Write([]byte("Invite Closed."))
 }
 
 func SetupOrgRoutes() {
