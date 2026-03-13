@@ -5,21 +5,64 @@ import (
 	"database/sql"
 	_ "database/sql"
 	"log"
-	_ "log"
 )
 
 type OrgInvite struct {
-	org_id   int
-	user_id  int
-	inv_key  int
-	inv_id   int
-	org_name string
-	username string
+	OrgID    int
+	UserID   int
+	InvKey   int
+	InvID    int
+	OrgName  string
+	Username string
 }
-// TODO: Make the method to fill all the data for OrgInvite
+
+type Org struct {
+	ID    int
+	Name  string
+	CeoID int
+}
+
+func GetOrg(org_id int) (*Org, error) {
+	u := &Org{}
+	err := AppDB.QueryRow("SELECT * FROM orgs WHERE id=?", org_id).Scan(&u.ID, &u.Name, &u.CeoID)
+	if err != nil {
+		//.Fatal(err)
+		return &Org{}, err
+	}
+	return u, nil
+}
+
+func CreateOrg(name string, ceo_id int) (sql.Result, error) {
+	id, err := AppDB.Exec("INSERT INTO orgs (name, ceo_id) VALUES (?, ?)", name, ceo_id)
+	id.LastInsertId()
+	return id, err
+}
+
+func GetInvitebyKey(inv_key string) (*OrgInvite, error) {
+	u := &OrgInvite{}
+	err := AppDB.QueryRow(`SELECT org_inv.org_id, org_inv.user_id, org_inv.key, org_inv.id, orgs.name, users.username 
+							FROM org_inv 
+							INNER JOIN users ON users.id=org_inv.user_id 
+							INNER JOIN orgs ON orgs.id=org_inv.org_id 
+							WHERE org_inv.key=?`).Scan(
+		&u.OrgID, &u.UserID, &u.InvKey, &u.InvID, &u.OrgName, &u.Username)
+	if err != nil {
+		return &OrgInvite{}, err
+	}
+	return u, nil
+}
+
 func SendInvite(user_id int, org_id int) error {
 	_, err := AppDB.Exec("INSERT INTO org_inv (user_id, org_id, key) VALUES (?, ?, ?)", user_id, org_id, rand.Text())
 	return err
+}
+
+func SetUserOrg(user_id int, org_id int) error {
+	_, er := AppDB.Exec("UPDATE users SET org_id=$1 WHERE id=$2", org_id, user_id)
+	if er != nil {
+		return er
+	}
+	return nil
 }
 
 func AcceptOrDeclineInvite(invite_key string, accept bool) error {
@@ -28,7 +71,7 @@ func AcceptOrDeclineInvite(invite_key string, accept bool) error {
 	if err != sql.ErrNoRows && err != nil {
 		log.Fatal(err)
 	}
-	if(err == sql.ErrNoRows){
+	if err == sql.ErrNoRows {
 		return err
 	}
 	_, err = AppDB.Exec("DELETE FROM org_inv WHERE id=?", inv_id)
@@ -36,7 +79,7 @@ func AcceptOrDeclineInvite(invite_key string, accept bool) error {
 		log.Fatal(err)
 	}
 	if accept {
-		_, er := AppDB.Exec("UPDATE users SET org_id=$1 WHERE id=$2", org_id, user_id)
+		er := SetUserOrg(user_id, org_id)
 		if er != nil {
 			log.Fatal(er)
 		}
