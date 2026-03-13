@@ -16,17 +16,20 @@ type OrgInvite struct {
 	org_name string
 	username string
 }
-
+// TODO: Make the method to fill all the data for OrgInvite
 func SendInvite(user_id int, org_id int) error {
 	_, err := AppDB.Exec("INSERT INTO org_inv (user_id, org_id, key) VALUES (?, ?, ?)", user_id, org_id, rand.Text())
 	return err
 }
 
-func AcceptOrDeclineInvite(invite_key string, accept bool) {
+func AcceptOrDeclineInvite(invite_key string, accept bool) error {
 	var inv_id, org_id, user_id int
 	err := AppDB.QueryRow("SELECT (id, user_id, org_id) FROM org_inv WHERE key=?", invite_key).Scan(&inv_id, &user_id, &org_id)
 	if err != sql.ErrNoRows && err != nil {
 		log.Fatal(err)
+	}
+	if(err == sql.ErrNoRows){
+		return err
 	}
 	_, err = AppDB.Exec("DELETE FROM org_inv WHERE id=?", inv_id)
 	if err != nil {
@@ -38,5 +41,5 @@ func AcceptOrDeclineInvite(invite_key string, accept bool) {
 			log.Fatal(er)
 		}
 	}
-
+	return nil
 }

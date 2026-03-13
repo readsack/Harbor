@@ -29,7 +29,7 @@ func SetupDB() {
 		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS users (
 							id INTEGER PRIMARY KEY,
 							username VARCHAR(100) NOT NULL,
-							email VARCHAR(200) UNIQUE NOT NULL, 
+							email VARCHAR(200) UNIQUE NOT NULL,
 							pass VARCHAR(200),
 							org_id INTEGER,
 							key VARCHAR(200),
@@ -53,7 +53,10 @@ func SetupDB() {
 								id INTEGER PRIMARY KEY,
 								name VARCHAR(100) NOT NULL,
 								org_id INTEGER NOT NULL,
+								sup_id INTEGER NOT NULL,
 								FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE
+								FOREIGN KEY (sup_id) REFERENCES users(id) ON DELETE CASCADE
+
 							)`)
 		if err != nil {
 			_ = tx.Rollback()

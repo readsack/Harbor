@@ -17,7 +17,7 @@ func sendInvite(w http.ResponseWriter, r *http.Request) {
 	u := ctx.Value("user").(*db.User)
 	if !u.OrgID.Valid {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You Don't Run Any Organization!"))
+		w.Write([]byte("User Doesn't Have Any Associated Organization!"))
 	} else {
 		var inv invite
 		//fmt.Println(r.Body)
@@ -28,9 +28,10 @@ func sendInvite(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Write([]byte("No user exists having the given email"))
 		} else {
+			//TODO: check if user is org owner.
 			v := int(u.OrgID.Int64)
 			db.SendInvite(usr.ID, v)
-		} //fmt.Printf("jsonContent: %v\n", inv)
+		}
 		w.Write([]byte("Invite Sent"))
 	}
 }
@@ -45,10 +46,14 @@ func closeInvite(w http.ResponseWriter, r *http.Request) {
 	} else {
 		accepted = true
 	}
-	db.AcceptOrDeclineInvite(inv_key, accepted)
+	err := db.AcceptOrDeclineInvite(inv_key, accepted)
+	if(err != nil){
+		w.Write([]byte("Invite Doesn't Exist."))
+	}
 	w.Write([]byte("Invite Closed."))
 }
 
 func SetupOrgRoutes() {
 	http.HandleFunc("POST /sendinvite", AuthMiddleware(sendInvite))
+	http.HandleFunc("POST /closeinvite", AuthMiddleware(closeInvite))
 }
