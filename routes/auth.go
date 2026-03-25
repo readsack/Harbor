@@ -18,8 +18,14 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		tokenCookie, err := r.Cookie("JWT")
 		if err != nil {
 			http.Redirect(w, r, "/login", 303)
+			return
 		}
+
 		tokenString := tokenCookie.Value
+		if tokenString == "" {
+			http.Redirect(w, r, "/login", 303)
+			return
+		}
 		//fmt.Println(tokenString)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 			secret := os.Getenv("SECRET")
@@ -28,6 +34,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 		if err != nil {
 			http.Redirect(w, r, "/login", 303)
+			return
 		}
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if ok && claims["key"] != nil {

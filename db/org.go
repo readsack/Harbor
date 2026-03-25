@@ -4,13 +4,14 @@ import (
 	"crypto/rand"
 	"database/sql"
 	_ "database/sql"
+	"fmt"
 	"log"
 )
 
 type OrgInvite struct {
 	OrgID    int
 	UserID   int
-	InvKey   int
+	InvKey   string
 	InvID    int
 	OrgName  string
 	Username string
@@ -44,11 +45,14 @@ func GetInvitebyKey(inv_key string) (*OrgInvite, error) {
 							FROM org_inv 
 							INNER JOIN users ON users.id=org_inv.user_id 
 							INNER JOIN orgs ON orgs.id=org_inv.org_id 
-							WHERE org_inv.key=?`).Scan(
+							WHERE org_inv.key=?`, inv_key).Scan(
 		&u.OrgID, &u.UserID, &u.InvKey, &u.InvID, &u.OrgName, &u.Username)
+	//fmt.Println(u)
 	if err != nil {
+		//fmt.Println(err)
 		return &OrgInvite{}, err
 	}
+	//fmt.Println(u)
 	return u, nil
 }
 
@@ -67,8 +71,9 @@ func SetUserOrg(user_id int, org_id int) error {
 
 func AcceptOrDeclineInvite(invite_key string, accept bool) error {
 	var inv_id, org_id, user_id int
-	err := AppDB.QueryRow("SELECT (id, user_id, org_id) FROM org_inv WHERE key=?", invite_key).Scan(&inv_id, &user_id, &org_id)
+	err := AppDB.QueryRow("SELECT id, user_id, org_id FROM org_inv WHERE key=?", invite_key).Scan(&inv_id, &user_id, &org_id)
 	if err != sql.ErrNoRows && err != nil {
+		fmt.Println("What happened here?")
 		log.Fatal(err)
 	}
 	if err == sql.ErrNoRows {

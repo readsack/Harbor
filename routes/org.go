@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	_ "fmt"
 	"harbor/main/db"
 	"log"
 	"net/http"
@@ -12,7 +13,7 @@ type invite struct {
 }
 
 type org struct {
-	Name string `json: "name"`
+	Name string `json:"name"`
 }
 
 func sendInvite(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +66,7 @@ func closeInvite(w http.ResponseWriter, r *http.Request) {
 		accepted = true
 	}
 	inv, err := db.GetInvitebyKey(inv_key)
+	//fmt.Println(inv)
 	if inv.UserID != u.ID {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Invite Doesn't Belong To User"))

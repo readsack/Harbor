@@ -85,6 +85,7 @@ func SetupDB() {
 			_ = tx.Rollback()
 			log.Fatal(err)
 		}
+		
 	}
 	if err := tx.Commit(); err != nil {
 		log.Fatal(err)
