@@ -22,5 +22,6 @@ func main() {
 	db.SetupDB()
 	routes.SetupAuthRoutes()
 	routes.SetupOrgRoutes()
+	routes.SetupTeamRoutes()
 	log.Fatal(http.ListenAndServe(PORT, nil))
 }

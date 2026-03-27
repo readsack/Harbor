@@ -63,6 +63,7 @@ func SetupDB() {
 			log.Fatal(err)
 		}
 		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS user_team (
+								id INTEGER PRIMARY KEY,
 								user_id INTEGER NOT NULL,
 								team_id INTEGER NOT NULL,
 								user_role INTEGER NOT NULL,
@@ -85,7 +86,30 @@ func SetupDB() {
 			_ = tx.Rollback()
 			log.Fatal(err)
 		}
-		
+		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS chats (
+								id INTEGER PRIMARY KEY,
+								team_id INTEGER NOT NULL,
+								name VARCHAR(200),
+								key VARCHAR(200),
+								FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+							)`)
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatal(err)
+		}
+		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS msgs (
+								id INTEGER PRIMARY KEY,
+								user_id INTEGER NOT NULL,
+								chat_id INTEGER NOT NULL,
+								content TEXT,
+								FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+								FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+							)`)
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatal(err)
+		}
+
 	}
 	if err := tx.Commit(); err != nil {
 		log.Fatal(err)

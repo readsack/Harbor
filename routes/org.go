@@ -1,10 +1,8 @@
 package routes
 
 import (
-	"encoding/json"
 	_ "fmt"
 	"harbor/main/db"
-	"log"
 	"net/http"
 )
 
@@ -24,15 +22,13 @@ func sendInvite(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("User Doesn't Have Any Associated Organization!"))
 	} else {
-		var inv invite
-		err := json.NewDecoder(r.Body).Decode(&inv)
-		if err != nil {
-			w.WriteHeader(http.StatusUnsupportedMediaType)
-			w.Write([]byte("Provided Content is not JSON"))
-			log.Fatal("Can't Decode JSON")
-			return
+		r.ParseForm()
+		email := r.FormValue("email")
+		if email == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Not Enough Data"))
 		}
-		usr, err := db.FindUserByEmail(inv.Email)
+		usr, err := db.FindUserByEmail(email)
 		if err != nil {
 			w.Write([]byte("No user exists having the given email"))
 		} else {
@@ -82,15 +78,15 @@ func closeInvite(w http.ResponseWriter, r *http.Request) {
 func createOrg(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
-	var Org org
-	err := json.NewDecoder(r.Body).Decode(&Org)
-	if err != nil {
-		w.WriteHeader(http.StatusUnsupportedMediaType)
-		w.Write([]byte("Provided Content is not JSON"))
-		log.Fatal("Can't Decode JSON")
+	r.ParseForm()
+	orgName := r.FormValue("name")
+	if orgName == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("No Name Provided"))
 		return
 	}
-	id, err := db.CreateOrg(Org.Name, u.ID)
+
+	id, err := db.CreateOrg(orgName, u.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Could not Create Org"))

@@ -1,5 +1,22 @@
 package db
 
+type Team struct {
+	ID    int
+	Name  string
+	OrgID int
+	SupID int
+}
+
+func GetTeamByID(team_id int) (*Team, error) {
+	u := &Team{}
+	err := AppDB.QueryRow("SELECT * FROM teams WHERE id=?", team_id).Scan(&u.ID, &u.Name, &u.OrgID, &u.SupID)
+	if err != nil {
+		//.Fatal(err)
+		return &Team{}, err
+	}
+	return u, nil
+}
+
 func handleErr(err error) {
 	if err != nil {
 		panic(err)
