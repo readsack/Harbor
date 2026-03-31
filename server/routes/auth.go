@@ -16,12 +16,14 @@ import (
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenCookie, err := r.Cookie("JWT")
+		//fmt.Println(r.Cookies())
 		if err != nil {
 			http.Redirect(w, r, "/login", 303)
 			return
 		}
 
 		tokenString := tokenCookie.Value
+		//fmt.Println(tokenString)
 		if tokenString == "" {
 			http.Redirect(w, r, "/login", 303)
 			return
@@ -66,6 +68,10 @@ func createJWT(user_key string) string {
 		log.Fatal(err)
 	}
 	return s
+}
+
+func loginRd(w http.ResponseWriter, _ *http.Request) {
+	fmt.Fprintln(w, "Not Authenticated")
 }
 
 func signUp(w http.ResponseWriter, r *http.Request) {
@@ -126,4 +132,5 @@ func SetupAuthRoutes() {
 	http.HandleFunc("POST /signup", signUp)
 	http.HandleFunc("POST /login", logIn)
 	http.HandleFunc("/testroute", AuthMiddleware(testingRoute))
+	http.HandleFunc("GET /login", loginRd)
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"harbor/main/chat"
 	"harbor/main/db"
 	"harbor/main/routes"
 	"log"
@@ -23,5 +24,6 @@ func main() {
 	routes.SetupAuthRoutes()
 	routes.SetupOrgRoutes()
 	routes.SetupTeamRoutes()
+	chat.InitHub()
 	log.Fatal(http.ListenAndServe(PORT, nil))
 }

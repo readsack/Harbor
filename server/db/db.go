@@ -54,7 +54,7 @@ func SetupDB() {
 								name VARCHAR(100) NOT NULL,
 								org_id INTEGER NOT NULL,
 								sup_id INTEGER NOT NULL,
-								FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE
+								FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE,
 								FOREIGN KEY (sup_id) REFERENCES users(id) ON DELETE CASCADE
 
 							)`)
@@ -91,7 +91,7 @@ func SetupDB() {
 								team_id INTEGER NOT NULL,
 								name VARCHAR(200),
 								key VARCHAR(200),
-								FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+								FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
 							)`)
 		if err != nil {
 			_ = tx.Rollback()
@@ -109,7 +109,37 @@ func SetupDB() {
 			_ = tx.Rollback()
 			log.Fatal(err)
 		}
-
+		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS boards (
+								id INTEGER PRIMARY KEY,
+								team_id INTEGER NOT NULL,
+								FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+							)`)
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatal(err)
+		}
+		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS columns (
+								id INTEGER PRIMARY KEY,
+								board_id INTEGER NOT NULL,
+								name TEXT,
+								FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
+							)`)
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatal(err)
+		}
+		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS items (
+								id INTEGER PRIMARY KEY,
+								column_id INTEGER NOT NULL,
+								content TEXT,
+								last_writer INTEGER NOT NULL,
+								FOREIGN KEY (column_id) REFERENCES columns(id) ON DELETE CASCADE,
+								FOREIGN KEY (last_writer) REFERENCES users(id) ON DELETE CASCADE
+							)`)
+		if err != nil {
+			_ = tx.Rollback()
+			log.Fatal(err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		log.Fatal(err)

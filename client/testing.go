@@ -8,45 +8,29 @@ import (
 	_ "net/http/cookiejar"
 	"net/url"
 
-	"github.com/gorilla/websocket"
+	_ "github.com/gorilla/websocket"
 )
 
 type Client struct {
 	http.Client
 }
 
-func main() {
+func testing() {
 	//fmt.Println("hello world")
 	var c Client
 	jar, _ := cookiejar.New(nil)
 	c.Client.Jar = jar
-	createAcc(&c, "hi", "hi", "hi", "http://localhost:8080/signup")
+	//createAcc(&c, "hello", "hello", "hello", "http://localhost:8080/signup")
 	logIntoAcc(&c, "hi", "hi", "http://localhost:8080/login")
 
 	/*obj, _ := url.Parse("http://localhost:8080/")
 	for _, cookie := range c.Client.Jar.Cookies(obj) {
 		println(cookie.Value)
 	}*/
-	hey := make(chan string)
-	defer close(hey)
 
-	go func() {
-		conn, _, err := websocket.DefaultDialer.Dial("ws://localhost:8080/msgs", nil)
-		if err != nil {
-			panic(err)
-		}
-		for {
-			_, msg, _ := conn.ReadMessage()
-			hey <- string(msg)
-		}
-
-	}()
-	for {
-		msgs := <-hey
-		fmt.Println(msgs)
-	}
 	//createOrg(&c, "HelloWorldOrg", "http://localhost:8080/createorg")
 	//createTeam(&c, "HelloTeam", "http://localhost:8080/createteam")
+	createChat(&c, "HelloTeam", "http://localhost:8080/createchat", 1)
 }
 
 func createOrg(c *Client, name, url_str string) {
@@ -76,6 +60,19 @@ func inviteIntoOrg(c *Client, email, url_str string) {
 func createTeam(c *Client, name, url_str string) {
 	resp, err := c.Client.PostForm(url_str, url.Values{
 		"name": {name},
+	})
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	println(string(body))
+}
+
+func createChat(c *Client, name, url_str string, teamID int) {
+	resp, err := c.Client.PostForm(url_str, url.Values{
+		"name":    {name},
+		"team_id": {fmt.Sprint(teamID)},
 	})
 	if err != nil {
 		panic(err)
