@@ -9,18 +9,24 @@ import (
 )
 
 type OrgInvite struct {
-	OrgID    int
-	UserID   int
-	InvKey   string
-	InvID    int
-	OrgName  string
-	Username string
+	OrgID    int    `json:"org_id"`
+	UserID   int    `json:"user_id"`
+	InvKey   string `json:"invite_key"`
+	InvID    int    `json:"invite_id"`
+	OrgName  string `json:"org_name"`
+	Username string `json:"user_name"`
+}
+
+type OrgData struct {
+	Org     `json:"org"`
+	Members []User `json:"users"`
+	Teams   []Team `json:"teams"`
 }
 
 type Org struct {
-	ID    int
-	Name  string
-	CeoID int
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	CeoID int    `json:"ceo_id"`
 }
 
 func GetOrg(org_id int) (*Org, error) {
@@ -90,4 +96,38 @@ func AcceptOrDeclineInvite(invite_key string, accept bool) error {
 		}
 	}
 	return nil
+}
+
+func GetOrgData(org_id int) (OrgData, error) {
+	orgData := OrgData{
+		Org:     Org{},
+		Members: make([]User, 0),
+		Teams:   make([]Team, 0),
+	}
+	org, err := GetOrg(org_id)
+	if err != nil {
+		return OrgData{}, err
+	}
+	orgData.Org = *org
+	user_rows, err := AppDB.Query("SELECT * FROM users WHERE org_id=?", org.ID)
+	for user_rows.Next() {
+		u := &User{}
+		user_rows.Scan(
+			&u.ID,
+			&u.Username,
+			&u.Email,
+			&u.Password,
+			&u.OrgID,
+			&u.Key,
+		)
+		orgData.Members = append(orgData.Members, *u)
+	}
+	team_rows, err := AppDB.Query("SELECT * FROM teams WHERE org_id=?", org.ID)
+	for team_rows.Next() {
+		u := &Team{}
+		team_rows.Scan(&u.ID, &u.Name, &u.OrgID, &u.SupID)
+		orgData.Teams = append(orgData.Teams, *u)
+	}
+	//orgData.Teams = append(orgData.Teams, )
+	return orgData, nil
 }

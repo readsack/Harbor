@@ -24,6 +24,7 @@ func main() {
 	routes.SetupAuthRoutes()
 	routes.SetupOrgRoutes()
 	routes.SetupTeamRoutes()
+	routes.HandleApiCalls()
 	chat.InitHub()
 	log.Fatal(http.ListenAndServe(PORT, nil))
 }

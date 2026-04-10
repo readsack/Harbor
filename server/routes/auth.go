@@ -13,6 +13,11 @@ import (
 	_ "github.com/joho/godotenv"
 )
 
+func pingPong(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:1420")
+	fmt.Fprintln(w, "Pong!")
+}
+
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenCookie, err := r.Cookie("JWT")
@@ -75,12 +80,14 @@ func loginRd(w http.ResponseWriter, _ *http.Request) {
 }
 
 func signUp(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	r.ParseMultipartForm(1048576)
 	var username string = r.FormValue("username")
 	var email string = r.FormValue("email")
 	var pass string = r.FormValue("pass")
+	fmt.Println(email)
 	_, err := db.FindUserByEmail(email)
 	if err != sql.ErrNoRows {
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "Email Already Exists")
 		return
 	}
@@ -92,18 +99,20 @@ func signUp(w http.ResponseWriter, r *http.Request) {
 	err = db.CreateUser(usr)
 	if err != nil {
 		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Write([]byte("Success!"))
 }
 
 func logIn(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	r.ParseMultipartForm(1048576)
 	var email string = r.FormValue("email")
 	var pass string = r.FormValue("pass")
 	fmt.Println(email, pass)
 	u, err := db.FindUserByEmail(email)
 	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
 		if err == sql.ErrNoRows {
 			fmt.Fprintln(w, "No Such Account Exists")
 		} else {
@@ -119,6 +128,7 @@ func logIn(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &c)
 		fmt.Fprintln(w, "Logged In Successfully!")
 	} else {
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "Failed To Login")
 	}
 
@@ -133,4 +143,5 @@ func SetupAuthRoutes() {
 	http.HandleFunc("POST /login", logIn)
 	http.HandleFunc("/testroute", AuthMiddleware(testingRoute))
 	http.HandleFunc("GET /login", loginRd)
+	http.HandleFunc("GET /ping", pingPong)
 }

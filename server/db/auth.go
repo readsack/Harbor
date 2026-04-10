@@ -7,12 +7,12 @@ import (
 )
 
 type User struct {
-	ID       int
-	Email    string
-	Username string
-	Password string
-	OrgID    sql.NullInt64
-	Key      string
+	ID       int           `json:"id"`
+	Email    string        `json:"email"`
+	Username string        `json:"username"`
+	Password string        `json:"password"`
+	OrgID    sql.NullInt64 `json:"org_id"`
+	Key      string        `json:"key"`
 }
 
 func FindUserByEmail(email string) (*User, error) {

@@ -3,10 +3,10 @@ package db
 import "crypto/rand"
 
 type Chat struct {
-	Name   string
-	ID     int
-	TeamID int
-	Key    string
+	Name   string `json:"name"`
+	ID     int    `json:"id"`
+	TeamID int    `json:"team_id"`
+	Key    string `json:"key"`
 }
 
 func CreateChat(name string, team_id int) error {

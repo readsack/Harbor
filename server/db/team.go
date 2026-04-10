@@ -1,10 +1,28 @@
 package db
 
 type Team struct {
-	ID    int
-	Name  string
-	OrgID int
-	SupID int
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	OrgID int    `json:"org_id"`
+	SupID int    `json:"sup_id"`
+}
+
+type Card struct {
+	ID       int    `json:"id"`
+	ColumnID int    `json:"column_id"`
+	Content  string `json:"content"`
+	User     `json:"user"`
+}
+
+type Column struct {
+}
+
+type Board struct {
+}
+
+type TeamData struct {
+	Team  `json:"team"`
+	Chats []Chat `json:"chats"`
 }
 
 func GetTeamByID(team_id int) (*Team, error) {
