@@ -106,7 +106,6 @@ func connectToChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c := chat.Client{}
-	c.ChatID = chatCh.ID
 	c.Conn = conn
 	c.User = u
 	c.Send = make(chan chat.Message)

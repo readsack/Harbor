@@ -11,13 +11,13 @@ import (
 type Message struct {
 	Name    string `json:"username"`
 	Content string `json:"content"`
+	ChatID  int    `json:"chat_id"`
 }
 
 type Client struct {
-	Send   chan Message
-	ChatID int
-	User   *db.User
-	Conn   *websocket.Conn
+	Send chan Message
+	User *db.User
+	Conn *websocket.Conn
 }
 
 type Hub struct {
@@ -75,7 +75,7 @@ func (client *Client) SendMessage() {
 
 		msg := <-client.Send
 		fmt.Println(msg)
-		go db.AddMsg(msg.Content, client.ChatID, client.User.ID)
+		go db.AddMsg(msg.Content, msg.ChatID, client.User.ID)
 		err := client.Conn.WriteJSON(msg)
 		if err != nil {
 			log.Println(err)

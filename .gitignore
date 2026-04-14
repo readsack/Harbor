@@ -1,3 +1,5 @@
-.env
-app.db
-main.exe
+server/.env
+server/app.db
+server/main.exe
+harbor-client/node_modules
+harbor-client/dist

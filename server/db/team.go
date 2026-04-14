@@ -14,12 +14,6 @@ type Card struct {
 	User     `json:"user"`
 }
 
-type Column struct {
-}
-
-type Board struct {
-}
-
 type TeamData struct {
 	Team  `json:"team"`
 	Chats []Chat `json:"chats"`
