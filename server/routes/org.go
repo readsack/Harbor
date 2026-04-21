@@ -15,6 +15,8 @@ type org struct {
 }
 
 func sendInvite(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(1048576)
+
 	defer r.Body.Close()
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
@@ -22,7 +24,6 @@ func sendInvite(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("User Doesn't Have Any Associated Organization!"))
 	} else {
-		r.ParseForm()
 		email := r.FormValue("email")
 		if email == "" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -76,9 +77,10 @@ func closeInvite(w http.ResponseWriter, r *http.Request) {
 }
 
 func createOrg(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(1048576)
+
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
-	r.ParseForm()
 	orgName := r.FormValue("name")
 	if orgName == "" {
 		w.WriteHeader(http.StatusBadRequest)

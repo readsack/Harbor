@@ -19,17 +19,17 @@ type org_st struct {
 func GetUserData(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
-	fmt.Println(u.Email)
+	//fmt.Println(u.Email)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Println(u)
+	//fmt.Println(u)
 	json.NewEncoder(w).Encode(u)
 }
 
 func GetOrgInvites(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
-	fmt.Println(u)
+	//fmt.Println(u)
 	out := &OrgInvites{
 		Invites: make([]db.OrgInvite, 0),
 	}
@@ -51,23 +51,43 @@ func GetOrgInvites(w http.ResponseWriter, r *http.Request) {
 		}
 		out.Invites = append(out.Invites, *o)
 	}
+	//.Println(out)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(out)
 }
 
 func GetOrgData(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var v org_st
-	json.NewDecoder(r.Body).Decode(&v)
-	org_d, err := db.GetOrgData(v.OrgID)
+	ctx := r.Context()
+	u := ctx.Value("user").(*db.User)
+
+	org_d, err := db.GetOrgData(int(u.OrgID.Int64))
 	if err != nil {
 		fmt.Println(err)
 	}
 	json.NewEncoder(w).Encode(org_d)
 }
 
+func GetBoardData(w http.ResponseWriter, r *http.Request) {
+
+	v := struct {
+		TeamID int `json:"team_id"`
+	}{
+		-1,
+	}
+	err := json.NewDecoder(r.Body).Decode(&v)
+	if err != nil {
+		fmt.Println(err)
+	}
+	val, err := db.GetBoard(v.TeamID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	json.NewEncoder(w).Encode(val)
+}
+
 func HandleApiCalls() {
-	http.HandleFunc("GET /api/org", AuthMiddleware(GetOrgData))
+	http.HandleFunc("POST /api/org", AuthMiddleware(GetOrgData))
 	http.HandleFunc("POST /api/user", AuthMiddleware(GetUserData))
 	http.HandleFunc("POST /api/user/invites", AuthMiddleware(GetOrgInvites))
+	http.HandleFunc("POST /api/team/board", AuthMiddleware(GetBoardData))
 }

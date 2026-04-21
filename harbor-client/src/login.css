@@ -1,0 +1,102 @@
+.vis {
+    animation: appear .8s forwards ease;
+}
+
+.invis {
+    display: none;
+}
+
+@keyframes expand {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 100;
+        transform: translateY(0);
+    }
+}
+
+
+input {
+    transition: 400ms all ease;
+}
+
+input:focus {
+    box-shadow: 0 0 10px white;
+}
+
+.selector > div.selected{
+    position: relative;
+    transition: 100ms ease all;
+    color: var(--color-blue-500); 
+}
+
+.title {
+    font-family: "Zilla Slab";
+    font-weight: 600;
+}
+
+.selector > div {
+    font-family: Inter;
+    font-weight: bold;
+    transition: 100ms ease all;
+}
+.banner {
+    position: relative;
+    overflow: hidden;
+}
+
+.attbr{
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+
+.backg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    
+    background-size: cover;
+    background-image: url("https://images.unsplash.com/photo-1775572272743-c0800347f949?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"), linear-gradient(rgba(0,0,0, 0.8), rgba(0,0,0, 0.8));
+    background-blend-mode: overlay;
+    filter: blur(10px);
+    z-index: -1;
+}
+
+.selected::after {
+    content: "";
+    position: absolute;
+    bottom: 0px;
+    left: 0;
+    width: 100%;
+    background-color: var(--color-blue-500);
+    height: 3px;
+      transform-origin: left;
+
+    animation: expand 0.4s ease forwards;
+
+}
+
+.btn {
+    transition: 400ms ease all;
+    border: 2px solid white;
+}
+
+.btn:hover {
+    background-color: white;
+    color: rgb(20,20,20)
+}

@@ -1,17 +1,18 @@
-import { useNavigate } from "@solidjs/router"
+import { reload, useNavigate } from "@solidjs/router"
 import { fetch } from "@tauri-apps/plugin-http"
 import { load } from "@tauri-apps/plugin-store"
 import { createSignal, Switch, Match, onMount, createEffect } from "solid-js"
 import './login.css'
 
 
-function Login() {
-  let [email, setEmail] = createSignal("")
+function Login(props) {
+  let [email, setEmail] = createSignal("hii")
   let [pass, setPass] = createSignal("")
   let [username, setUsername] = createSignal("")
   let [addr, setAddr] = createSignal("")
   let [errL, setErrL] = createSignal("")
   let [errS, setErrS] = createSignal("")
+  let [isLogin, setLogin] = createSignal(true)
   let decoder = new TextDecoder("utf-8")
   let nav = useNavigate()
   let store
@@ -21,7 +22,6 @@ function Login() {
     store = await load('store.json', { autoSave: false });
     let val = await store.get('addr')
     setAddr(_ => val)
-    let jwt = await store.get('jwt')
     //console.log(jwt)
   })
 
@@ -44,7 +44,8 @@ function Login() {
         //console.log(res.headers.getSetCookie()[0])
         await store.set("jwt", res.headers.getSetCookie()[0])
         await store.save()
-        nav("/")
+        props.onDataLoaded()
+
       }
     }
     catch (err) {
@@ -88,50 +89,39 @@ function Login() {
   }
 
   return (
-    <main className="flex justify-center items-center w-screen h-screen">
-      <div className="flex w-screen items-center justify-center">
-        <div className="flex flex-col items-center justify-center w-max grow">
-          <label className="input m-2">
-            Email
-            <input type="email" className="text-sm" placeholder="Enter Your Email..." value={email()} onChange={(e) => {
-              setEmail(_ => e.target.value)
-            }} />
-          </label>
-          <label className="input m-2">
-            Password
-            <input type="password" className="text-sm" placeholder="Enter Your Password..." value={pass()} onChange={(e) => {
-              setPass(_ => e.target.value)
-
-            }} />
-          </label>
-          <button className="btn btn-wide btn-outline m-4" on:click={logIn}>Login</button>
-          <div className="text-md">{errL()}</div>
+    <div className="h-180 w-max rounded-lg p-10 shadow-xl shadow-zinc-950 bg-zinc-900">
+      <div className="forms flex flex-col">
+        <div className="selector flex w-full justify-around text-lg">
+          <div class="opt1 grow text-center p-5" classList={{ "selected": isLogin() }} on:click={() => { setLogin(_ => true) }}>Login</div>
+          <div class="opt1 grow text-center p-5" classList={{ "selected": !isLogin() }} on:click={() => { setLogin(_ => false) }}>Signup</div>
         </div>
-        <div class="divider divider-horizontal">OR</div>
-        <div className="flex flex-col items-center justify-center w-max grow">
-          <label className="input m-2">
-            Username
-            <input type="text" className="text-sm" placeholder="Enter Your Username..." value={username()} onChange={(e) => {
-              setUsername(_ => e.target.value)
-            }} />
-          </label>
-          <label className="input m-2">
-            Email
-            <input type="email" className="text-sm" placeholder="Enter Your Email..." value={email()} onChange={(e) => {
-              setEmail(_ => e.target.value)
-            }} />
-          </label>
-          <label className="input m-2">
-            Password
-            <input type="password" className="text-sm" placeholder="Enter Your Password..." value={pass()} onChange={(e) => {
-              setPass(_ => e.target.value)
-            }} />
-          </label>
-          <button className="btn btn-wide btn-outline m-4" onClick={signUp}>Signup</button>
-          <div className="text-md">{errS()}</div>
+        <div className="loginForm grow flex flex-col items-center" classList={{ "vis": isLogin(), "invis": !isLogin() }}>
+          <div className="text-3xl m-10 mt-20 font-semibold">Log In To Your Account</div>
+          <div className="cont flex flex-col w-100">
+            <div className="text-md font-semibold mb-2">EMAIL</div>
+            <input type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Email..." value={email()} onChange={(e) => { setEmail(_ => e.target.value) }} />
+            <div className="text-md font-semibold mt-8 mb-2">PASSWORD</div>
+            <input type="password" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Password..." value={pass()} onChange={(e) => { setPass(_ => e.target.value) }} />
+            <button className="btn py-3 px-5 border-2 border-zinc-400 rounded-md mt-8 w-min" onClick={logIn}>Submit</button>
+            <div className="text-md text-center mt-5">{errL()}</div>
+          </div>
+        </div>
+        <div className="signUpform grow flex flex-col items-center" classList={{ "vis": !isLogin(), "invis": isLogin() }}>
+          <div className="text-3xl m-10 mt-10 font-semibold">Create A New Account</div>
+          <div className="cont flex flex-col w-100">
+            <div className="text-md font-semibold">USERNAME</div>
+            <input type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Username..." value={username()} onChange={(e) => { setUsername(_ => e.target.value) }} />
+            <div className="text-md font-semibold mt-5">EMAIL</div>
+            <input type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Email..." value={email()} onChange={(e) => { setEmail(_ => e.target.value) }} />
+            <div className="text-md font-semibold  mt-5 ">PASSWORD</div>
+            <input type="password" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Password..." value={pass()} onChange={(e) => { setPass(_ => e.target.value) }} />
+            <button className="btn py-3 px-5 border-2 border-zinc-400 rounded-xl mt-5 w-min" onClick={signUp}>Create</button>
+            <div className="text-md text-center mt-5">{errS()}</div>
+
+          </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
 

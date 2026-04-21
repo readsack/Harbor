@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"harbor/main/db"
 	"log"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -91,16 +90,12 @@ func (hub *Hub) HandleClients() {
 	for {
 		select {
 		case msg := <-hub.broadcast:
-			//log.Println(msg)
 			for client := range hub.clients {
-				//fmt.Println(client)
 				client.Send <- msg
 			}
 		case client := <-hub.register:
-			//log.Println(client)
 			hub.clients[client] = true
 		case client := <-hub.unregister:
-			//log.Println(client)
 			if _, ok := hub.clients[client]; ok {
 				close(client.Send)
 				delete(hub.clients, client)

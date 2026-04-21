@@ -99,6 +99,7 @@ func AcceptOrDeclineInvite(invite_key string, accept bool) error {
 }
 
 func GetOrgData(org_id int) (OrgData, error) {
+
 	orgData := OrgData{
 		Org:     Org{},
 		Members: make([]User, 0),
@@ -109,20 +110,25 @@ func GetOrgData(org_id int) (OrgData, error) {
 		return OrgData{}, err
 	}
 	orgData.Org = *org
-	user_rows, err := AppDB.Query("SELECT * FROM users WHERE org_id=?", org.ID)
+	user_rows, err := AppDB.Query("SELECT * FROM users WHERE org_id=?", org_id)
+	//log.Println(err)
+	//fmt.Println(org_id)
 	for user_rows.Next() {
 		u := &User{}
+		var abc string
 		user_rows.Scan(
 			&u.ID,
 			&u.Username,
 			&u.Email,
 			&u.Password,
 			&u.OrgID,
-			&u.Key,
+			&abc,
 		)
+		//fmt.Println(user_rows.Err())
 		orgData.Members = append(orgData.Members, *u)
 	}
-	team_rows, err := AppDB.Query("SELECT * FROM teams WHERE org_id=?", org.ID)
+	//fmt.Println(orgData.Members)
+	team_rows, err := AppDB.Query("SELECT * FROM teams WHERE org_id=?", org_id)
 	for team_rows.Next() {
 		u := &Team{}
 		team_rows.Scan(&u.ID, &u.Name, &u.OrgID, &u.SupID)

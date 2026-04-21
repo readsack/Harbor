@@ -7,16 +7,10 @@ type Team struct {
 	SupID int    `json:"sup_id"`
 }
 
-type Card struct {
-	ID       int    `json:"id"`
-	ColumnID int    `json:"column_id"`
-	Content  string `json:"content"`
-	User     `json:"user"`
-}
-
 type TeamData struct {
-	Team  `json:"team"`
-	Chats []Chat `json:"chats"`
+	Team    `json:"team"`
+	Chats   []Chat `json:"chats"`
+	Members []User `json:"members"`
 }
 
 func GetTeamByID(team_id int) (*Team, error) {
@@ -38,11 +32,12 @@ func handleErr(err error) {
 func CreateTeam(name string, user_id int, org_id int) error {
 	row, err := AppDB.Exec("INSERT INTO teams (name, org_id, sup_id) VALUES (?, ?, ?)", name, org_id, user_id)
 	if err != nil {
-		team_id, _ := row.LastInsertId()
-		err := CreateBoard(int(team_id))
 		return err
 	}
+	team_id, _ := row.LastInsertId()
+	err = CreateBoard(int(team_id))
 	return err
+
 }
 
 func AddIntoTeam(team_id int, user_id int) error {

@@ -58,7 +58,7 @@ func FindUserByKey(key string) (*User, error) {
 
 func FindUserByID(id int) (*User, error) {
 	u := &User{}
-	err := AppDB.QueryRow("SELECT * FROM users WHERE id=?", id).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.OrgID)
+	err := AppDB.QueryRow("SELECT id, username, email, pass, org_id FROM users WHERE id=?", id).Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.OrgID)
 	if err != nil {
 		//.Fatal(err)
 		return &User{}, err

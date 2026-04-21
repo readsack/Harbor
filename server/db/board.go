@@ -1,23 +1,28 @@
 package db
 
-type Item struct {
-	Content      string
-	ID           int
-	ColumnID     int
-	LastWriterID int
+import (
+	"database/sql"
+	"log"
+)
+
+type Card struct {
+	ID       int    `json:"id"`
+	ColumnID int    `json:"column_id"`
+	Content  string `json:"content"`
+	User     `json:"user"`
 }
 
 type Column struct {
-	Items   []Item
-	ID      int
-	BoardID int
-	Name    string
+	Cards   []Card `json:"cards"`
+	ID      int    `json:"id"`
+	BoardID int    `json:"board_id"`
+	Name    string `json:"name"`
 }
 
 type Board struct {
-	ID      int
-	TeamID  int
-	Columns []Column
+	ID      int      `json:"id"`
+	TeamID  int      `json:"team_id"`
+	Columns []Column `json:"columns"`
 }
 
 func CreateBoard(team_id int) error {
@@ -37,10 +42,53 @@ func CreateItem(column_id int, user_id int, content string) error {
 
 func GetTeamBoardID(team_id int) (int, error) {
 	var col_id int
-	err := AppDB.QueryRow("SELECT id FROM columns WHERE team_id=?", team_id).Scan(&col_id)
+	err := AppDB.QueryRow("SELECT id FROM boards WHERE team_id=?", team_id).Scan(&col_id)
 	return col_id, err
 }
 
-func GetBoard(board_id int) {
-
+func GetBoard(team_id int) (Board, error) {
+	board_id, err := GetTeamBoardID(team_id)
+	if err != nil {
+		return Board{}, err
+	}
+	var b Board
+	b.ID = board_id
+	b.TeamID = team_id
+	b.Columns = make([]Column, 0)
+	cols, err := AppDB.Query("SELECT * FROM columns WHERE board_id=?", board_id)
+	if err != nil {
+		return b, err
+	}
+	for cols.Next() {
+		var c Column
+		err = cols.Scan(&c.ID, &c.BoardID, &c.Name)
+		if err != nil && err != sql.ErrNoRows {
+			return b, err
+		}
+		cards, err := AppDB.Query("SELECT * FROM items WHERE column_id=?", c.ID)
+		c.Cards = make([]Card, 0)
+		if err != nil && err != sql.ErrNoRows {
+			log.Println("hiee")
+			return b, err
+		}
+		for cards.Next() {
+			var card Card
+			var user_id int
+			err = cards.Scan(&card.ID, &card.ColumnID, &card.Content, &user_id)
+			if err != nil {
+				log.Println("hiw")
+				log.Fatal(err)
+			}
+			usr, err := FindUserByID(user_id)
+			if err != nil {
+				log.Println("hi")
+				log.Fatal(err)
+			}
+			//log.Println(usr)
+			card.User = *usr
+			c.Cards = append(c.Cards, card)
+		}
+		b.Columns = append(b.Columns, c)
+	}
+	return b, nil
 }

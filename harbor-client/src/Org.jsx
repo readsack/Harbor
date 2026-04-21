@@ -1,15 +1,16 @@
 import { useNavigate } from "@solidjs/router"
 import { fetch } from "@tauri-apps/plugin-http"
 import { load } from "@tauri-apps/plugin-store"
-import { createSignal, For, onMount } from "solid-js"
+import { createSignal, For, Match, onMount, Switch } from "solid-js"
 
 
 function Org() {
   let decoder = new TextDecoder("utf-8")
-  let [invites, setInvites] = createSignal([])
+  let [invites, setInvites] = createSignal(null)
   let store
   let [addr, setAddr] = createSignal("")
   let [jwt, setJWT] = createSignal("")
+  let [cur, setCur] = createSignal("inv")
   let nav = useNavigate()
 
   onMount(async () => {
@@ -28,7 +29,7 @@ function Org() {
     let v = await req.json()
     setInvites(_ => v.invites)
     //console.log(invites())
-    console.log(v.invites[0])
+    console.log(v.invites)
     if (!req.ok) console.log(decoder.decode((await req.body.getReader().read()).value))
 
   })
@@ -55,42 +56,43 @@ function Org() {
   }
 
   return (
-    <main >
-      <div className="flex w-screen h-screen">
-        <ul className="list flex flex-col grow">
-          <div className="text-xl font-bold m-5">Invites You Have Received</div>
-
-          <For each={invites()}>
-            {(invite, index) => (
-              <li className="text-md list-row shadow-md bg-base-200 p-7 ml-5 flex items-center">
-                <div className="grow">{invite.org_name}</div>
-                <div className="btns">
-                  <button className="btn btn-ghost btn-square" onClick={async () => {
-                    await closeInv("1", invite.invite_key)
-                  }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16">
-                      <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z" />
-                    </svg>
-                  </button>
-                  <button className="btn btn-square btn-ghost ml-5" onClick={async () => {
-                    await closeInv("0", invite.invite_key)
-                  }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
-                      <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-                    </svg>
-                  </button>
+    <div class="w-full flex justify-center">
+      <Switch>
+        <Match when={cur() == "inv"}>
+          <div class="h-180 w-1/2 bg-zinc-900 load rounded-lg flex flex-col">
+            <div className="text-3xl ml-10 mt-10">Invites</div>
+            <div className="text-lg ml-10 text-zinc-300">Here Are the Invites You Have Received</div>
+            <a className="text-md text-sky-400 ml-10" onClick={() => { setCur(_ => "cre") }}>Want to Create An Organization?</a>
+            <div className="invites flex flex-col grow">
+              <For each={invites()} fallback={(
+                <div class="flex flex-col w-full grow justify-center items-center">
+                  <div className="text-lg text-zinc-400">No Items D:</div>
                 </div>
-              </li>
+              )}>
+                {(invite, index) => (
+                  <div className="flex m-10 p-5 border-2 border-zinc-500 rounded-lg items-center">
+                    <div className="text-md">
+                      {invite.org_name}
+                    </div>
+                    <div className="obj grow"></div>
+                    <div className="btn p-3 mx-3 rounded-md" onClick={() => { closeInv("1", invite.invite_key) }}>Accept</div>
+                    <div className="btn p-3 rounded-md" onClick={() => { closeInv("0", invite.invite_key) }}>Deny</div>
 
-            )}
-          </For>
-        </ul>
-        <div class="divider divider-horizontal">OR</div>
-        <div className="flex grow">
+                  </div>
+                )}
+              </For>
+            </div>
+          </div>
+        </Match>
+        <Match when={cur() == "cre"}>
+          <div class="h-180 w-1/3 bg-zinc-900 load">
+            <div className="text-3xl ml-10 mt-10">Create A New Organization</div>
+            <a className="text-md text-sky-400 ml-10" onClick={() => { setCur(_ => "inv") }}>Want to Check Invites Instead?</a>
+          </div>
+        </Match>
+      </Switch>
 
-        </div>
-      </div>
-    </main>
+    </div>
   )
 }
 

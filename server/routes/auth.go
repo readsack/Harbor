@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"fmt"
 	"harbor/main/db"
@@ -76,6 +77,7 @@ func createJWT(user_key string) string {
 }
 
 func loginRd(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusUnauthorized)
 	fmt.Fprintln(w, "Not Authenticated")
 }
 
@@ -84,17 +86,20 @@ func signUp(w http.ResponseWriter, r *http.Request) {
 	var username string = r.FormValue("username")
 	var email string = r.FormValue("email")
 	var pass string = r.FormValue("pass")
-	fmt.Println(email)
+	//fmt.Println(email)
 	_, err := db.FindUserByEmail(email)
 	if err != sql.ErrNoRows {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "Email Already Exists")
 		return
 	}
+	h := sha256.New()
+	h.Write([]byte(pass))
+	bs := h.Sum(nil)
 	usr := db.User{
 		Username: username,
 		Email:    email,
-		Password: pass,
+		Password: fmt.Sprintf("%x\n", bs),
 	}
 	err = db.CreateUser(usr)
 	if err != nil {
@@ -109,8 +114,9 @@ func logIn(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(1048576)
 	var email string = r.FormValue("email")
 	var pass string = r.FormValue("pass")
-	fmt.Println(email, pass)
+	//	fmt.Println(email, pass)
 	u, err := db.FindUserByEmail(email)
+	//	fmt.Println(err)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		if err == sql.ErrNoRows {
@@ -120,7 +126,11 @@ func logIn(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	if pass == u.Password {
+	h := sha256.New()
+	h.Write([]byte(pass))
+	bs := h.Sum(nil)
+	//	fmt.Printf("%x\n", bs)
+	if fmt.Sprintf("%x\n", bs) == u.Password {
 		jwtToken := createJWT(u.Key)
 		var c http.Cookie
 		c.Name = "JWT"

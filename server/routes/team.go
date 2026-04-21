@@ -20,6 +20,8 @@ type addUserReq struct {
 }
 
 func createTeam(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(1048576)
+
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
 	r.ParseForm()
@@ -34,7 +36,8 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User Isn't CEO of The Organization"))
 		return
 	}
-	db.CreateTeam(teamName, u.ID, org.ID)
+	err = db.CreateTeam(teamName, u.ID, org.ID)
+	fmt.Println(err)
 	w.Write([]byte("Team Created Successfully"))
 }
 

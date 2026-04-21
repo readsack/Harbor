@@ -29,8 +29,8 @@ func SetupDB() {
 		_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS users (
 							id INTEGER PRIMARY KEY,
 							username VARCHAR(100) NOT NULL,
-							email VARCHAR(200) UNIQUE NOT NULL,
-							pass VARCHAR(200),
+							email TEXT UNIQUE NOT NULL,
+							pass TEXT,
 							org_id INTEGER,
 							key VARCHAR(200),
 							FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE SET NULL
