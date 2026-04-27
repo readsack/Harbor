@@ -85,9 +85,33 @@ func GetBoardData(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(val)
 }
 
+func GetTeamData(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	u := ctx.Value("user").(*db.User)
+	teamID := struct {
+		TeamID int `json:"team_id"`
+	}{
+		0,
+	}
+	json.NewDecoder(r.Body).Decode(&teamID)
+	if db.CheckIfUserInTeam(teamID.TeamID, u.ID) != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "User Doesn't Belong To Team")
+		return
+	}
+	teamData, err := db.GetTeamData(teamID.TeamID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Server Error")
+		return
+	}
+	json.NewEncoder(w).Encode(*teamData)
+}
+
 func HandleApiCalls() {
 	http.HandleFunc("POST /api/org", AuthMiddleware(GetOrgData))
 	http.HandleFunc("POST /api/user", AuthMiddleware(GetUserData))
 	http.HandleFunc("POST /api/user/invites", AuthMiddleware(GetOrgInvites))
 	http.HandleFunc("POST /api/team/board", AuthMiddleware(GetBoardData))
+	http.HandleFunc("POST /api/team", AuthMiddleware(GetTeamData))
 }

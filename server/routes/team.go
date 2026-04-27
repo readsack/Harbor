@@ -37,6 +37,7 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = db.CreateTeam(teamName, u.ID, org.ID)
+
 	fmt.Println(err)
 	w.Write([]byte("Team Created Successfully"))
 }
@@ -86,12 +87,32 @@ func createChat(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Created Chat Successfully"))
 }
 
+func getChatHistory(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(1048576)
+	chatKey := r.FormValue("chat-key")
+	if chatKey == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "No Chat Key")
+		return
+	}
+	chatCh, err := db.GetChat(chatKey)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintln(w, "Chat Key Is Not Valid!")
+		return
+	}
+	cData, err := db.GetChatHistory(chatCh)
+	json.NewEncoder(w).Encode(cData)
+}
+
 func connectToChat(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
 	r.ParseForm()
 	chatKey := r.Header.Get("X-Chat-Key")
 	if chatKey == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "No Chat Key")
 		return
 	}
 	conn, err := chat.Upgrader.Upgrade(w, r, nil)
@@ -100,17 +121,20 @@ func connectToChat(w http.ResponseWriter, r *http.Request) {
 	}
 	chatCh, err := db.GetChat(chatKey)
 	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "Chat Key Is Not Valid!")
 		return
 	}
 	err = db.CheckIfUserInTeam(chatCh.TeamID, u.ID)
 	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "User Doesn't Belong To Team")
 		return
 	}
 	c := chat.Client{}
 	c.Conn = conn
 	c.User = u
+	c.Chat = chatCh
 	c.Send = make(chan chat.Message)
 	c.HandleClientConnection()
 
@@ -157,4 +181,5 @@ func SetupTeamRoutes() {
 	http.HandleFunc("GET /msgs", AuthMiddleware(connectToChat))
 	http.HandleFunc("POST /createchat", AuthMiddleware(createChat))
 	http.HandleFunc("POST /addboard", AuthMiddleware(createColumnOrItem))
+	http.HandleFunc("POST /chathistory", AuthMiddleware(getChatHistory))
 }

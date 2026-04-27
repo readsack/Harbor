@@ -2,9 +2,9 @@ package chat
 
 import (
 	"fmt"
+	"github.com/gorilla/websocket"
 	"harbor/main/db"
 	"log"
-	"github.com/gorilla/websocket"
 )
 
 type Message struct {
@@ -17,6 +17,7 @@ type Client struct {
 	Send chan Message
 	User *db.User
 	Conn *websocket.Conn
+	db.Chat
 }
 
 type Hub struct {
@@ -91,7 +92,9 @@ func (hub *Hub) HandleClients() {
 		select {
 		case msg := <-hub.broadcast:
 			for client := range hub.clients {
-				client.Send <- msg
+				if msg.ChatID == client.Chat.ID {
+					client.Send <- msg
+				}
 			}
 		case client := <-hub.register:
 			hub.clients[client] = true

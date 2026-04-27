@@ -35,6 +35,7 @@ func CreateTeam(name string, user_id int, org_id int) error {
 		return err
 	}
 	team_id, _ := row.LastInsertId()
+	err = AddIntoTeam(int(team_id), user_id)
 	err = CreateBoard(int(team_id))
 	return err
 
@@ -48,4 +49,36 @@ func AddIntoTeam(team_id int, user_id int) error {
 func CheckIfUserInTeam(team_id int, user_id int) error {
 	row := AppDB.QueryRow("SELECT * FROM user_team WHERE user_id=$1 AND team_id=$2", user_id, team_id)
 	return row.Err()
+}
+
+func GetTeamData(team_id int) (*TeamData, error) {
+	var teamData TeamData
+	team, err := GetTeamByID(team_id)
+	if err != nil {
+		return &teamData, err
+	}
+	teamData.Team = *team
+	chats, err := AppDB.Query("SELECT * FROM chats WHERE team_id=?", team_id)
+	for chats.Next() {
+		var c Chat
+		err = chats.Scan(c.ID, c.TeamID, c.Name, c.Key)
+		if err != nil {
+			return &teamData, err
+		}
+		teamData.Chats = append(teamData.Chats, c)
+	}
+	users, err := AppDB.Query("SELECT user_id FROM user_team WHERE team_id=?", teamData.Team.ID)
+	for users.Next() {
+		var user_id int
+		err := users.Scan(&user_id)
+		if err != nil {
+			return &teamData, err
+		}
+		u, err := FindUserByID(user_id)
+		if err != nil {
+			return &teamData, err
+		}
+		teamData.Members = append(teamData.Members, *u)
+	}
+	return &teamData, nil
 }

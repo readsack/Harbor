@@ -1,0 +1,26 @@
+{
+  "info": {
+    "_postman_id": "850901bd-e2ed-49f9-b021-ef4bef22025f",
+    "name": "Harbor",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "e62d50cf-017b-4ee0-8e59-244cbbccbd50"
+  },
+  "item": [
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://example.com",
+          "protocol": "https",
+          "host": [
+            "example",
+            "com"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
