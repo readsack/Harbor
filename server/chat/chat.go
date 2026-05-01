@@ -2,19 +2,14 @@ package chat
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
 	"harbor/main/db"
 	"log"
+
+	"github.com/gorilla/websocket"
 )
 
-type Message struct {
-	Name    string `json:"username"`
-	Content string `json:"content"`
-	ChatID  int    `json:"chat_id"`
-}
-
 type Client struct {
-	Send chan Message
+	Send chan db.Message
 	User *db.User
 	Conn *websocket.Conn
 	db.Chat
@@ -24,7 +19,7 @@ type Hub struct {
 	clients    map[*Client]bool
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan Message
+	broadcast  chan db.Message
 }
 
 var Upgrader websocket.Upgrader = websocket.Upgrader{
@@ -43,7 +38,7 @@ func InitHub() {
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		broadcast:  make(chan Message),
+		broadcast:  make(chan db.Message),
 	}
 
 	go centralHub.HandleClients()
@@ -57,13 +52,18 @@ func (client *Client) Listen() {
 		client.Conn.Close()
 	}()
 	for {
-		var m Message
+		var m db.Message
 		err := client.Conn.ReadJSON(&m)
 		//log.Println(m)
+
 		if err != nil {
 			log.Println(err)
 			return
 		}
+		m.Name = client.User.Username
+		m.ID = client.User.ID
+		m.ChatID = client.Chat.ID
+		go db.AddMsg(m.Content, m.ChatID, client.User.ID)
 		hub.broadcast <- m
 	}
 }
@@ -75,7 +75,7 @@ func (client *Client) SendMessage() {
 
 		msg := <-client.Send
 		fmt.Println(msg)
-		go db.AddMsg(msg.Content, msg.ChatID, client.User.ID)
+
 		err := client.Conn.WriteJSON(msg)
 		if err != nil {
 			log.Println(err)
@@ -91,6 +91,7 @@ func (hub *Hub) HandleClients() {
 	for {
 		select {
 		case msg := <-hub.broadcast:
+
 			for client := range hub.clients {
 				if msg.ChatID == client.Chat.ID {
 					client.Send <- msg

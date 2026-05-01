@@ -1,0 +1,5 @@
+.chat-list {
+    min-height: 0;
+    flex-grow: 1;
+    overflow: scroll;
+}

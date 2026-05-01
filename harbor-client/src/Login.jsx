@@ -99,9 +99,9 @@ function Login(props) {
           <div className="text-3xl m-10 mt-20 font-semibold">Log In To Your Account</div>
           <div className="cont flex flex-col w-100">
             <div className="text-md font-semibold mb-2">EMAIL</div>
-            <input type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Email..." value={email()} onChange={(e) => { setEmail(_ => e.target.value) }} />
+            <input id="input" type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Email..." value={email()} onChange={(e) => { setEmail(_ => e.target.value) }} />
             <div className="text-md font-semibold mt-8 mb-2">PASSWORD</div>
-            <input type="password" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Password..." value={pass()} onChange={(e) => { setPass(_ => e.target.value) }} />
+            <input id="input" type="password" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Password..." value={pass()} onChange={(e) => { setPass(_ => e.target.value) }} />
             <button className="btn py-3 px-5 border-2 border-zinc-400 rounded-md mt-8 w-min" onClick={logIn}>Submit</button>
             <div className="text-md text-center mt-5">{errL()}</div>
           </div>
@@ -110,11 +110,11 @@ function Login(props) {
           <div className="text-3xl m-10 mt-10 font-semibold">Create A New Account</div>
           <div className="cont flex flex-col w-100">
             <div className="text-md font-semibold">USERNAME</div>
-            <input type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Username..." value={username()} onChange={(e) => { setUsername(_ => e.target.value) }} />
+            <input id="input" type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Username..." value={username()} onChange={(e) => { setUsername(_ => e.target.value) }} />
             <div className="text-md font-semibold mt-5">EMAIL</div>
-            <input type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Email..." value={email()} onChange={(e) => { setEmail(_ => e.target.value) }} />
+            <input id="input" type="text" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Email..." value={email()} onChange={(e) => { setEmail(_ => e.target.value) }} />
             <div className="text-md font-semibold  mt-5 ">PASSWORD</div>
-            <input type="password" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Password..." value={pass()} onChange={(e) => { setPass(_ => e.target.value) }} />
+            <input id="input" type="password" class="w-100 p-5 border-2 border-zinc-600 rounded-md" placeholder="Enter Your Password..." value={pass()} onChange={(e) => { setPass(_ => e.target.value) }} />
             <button className="btn py-3 px-5 border-2 border-zinc-400 rounded-xl mt-5 w-min" onClick={signUp}>Create</button>
             <div className="text-md text-center mt-5">{errS()}</div>
 

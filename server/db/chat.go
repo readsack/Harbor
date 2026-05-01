@@ -1,18 +1,21 @@
 package db
 
-import "crypto/rand"
+import (
+	"crypto/rand"
+)
+
+type Message struct {
+	ID      int
+	Name    string `json:"username"`
+	Content string `json:"content"`
+	ChatID  int    `json:"chat_id"`
+}
 
 type Chat struct {
 	Name   string `json:"name"`
 	ID     int    `json:"id"`
 	TeamID int    `json:"team_id"`
 	Key    string `json:"key"`
-}
-
-type Message struct {
-	Sender  string `json:"sender"`
-	Content string `json:"content"`
-	ID      int    `json:"id"`
 }
 
 type ChatData struct {
@@ -40,13 +43,14 @@ func GetChatHistory(c Chat) (ChatData, error) {
 	var chatData ChatData
 	chatData.Chat = c
 	chatData.Messages = make([]Message, 0)
-	msgs, err := AppDB.Query("SELECT msgs.id, msgs.content, users.username FROM msgs INNER JOIN users ON users.id=msgs.user_id WHERE msgs.chat_id=?", c.ID)
+	msgs, err := AppDB.Query("SELECT users.id, users.username, msgs.content, msgs.chat_id FROM msgs INNER JOIN users ON users.id=msgs.user_id WHERE msgs.chat_id=?", c.ID)
 	if err != nil {
 		return chatData, err
 	}
+
 	for msgs.Next() {
 		var m Message
-		err = msgs.Scan(m.ID, m.Content, m.Sender)
+		err = msgs.Scan(&m.ID, &m.Name, &m.Content, &m.ChatID)
 		if err != nil {
 			return chatData, err
 		}

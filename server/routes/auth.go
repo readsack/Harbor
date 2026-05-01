@@ -148,10 +148,21 @@ func testingRoute(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintln(w, "Hello Testing!")
 }
 
+func deleteAccount(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	u := ctx.Value("user").(*db.User)
+	_, err := db.AppDB.Exec("DELETE FROM users WHERE id=?", u.ID)
+	if err != nil {
+		http.Error(w, "Internal Server Issue", http.StatusInternalServerError)
+	}
+
+}
+
 func SetupAuthRoutes() {
 	http.HandleFunc("POST /signup", signUp)
 	http.HandleFunc("POST /login", logIn)
 	http.HandleFunc("/testroute", AuthMiddleware(testingRoute))
 	http.HandleFunc("GET /login", loginRd)
 	http.HandleFunc("GET /ping", pingPong)
+	http.HandleFunc("POST /removeacc", AuthMiddleware(deleteAccount))
 }

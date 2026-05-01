@@ -52,6 +52,25 @@
     }
 }
 
+input {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 100;
+    }
+}
+
+.overlay {
+    animation: fade-in forwards 0.8s ease;
+}
+
 @keyframes appear {
     from {
         opacity: 0;
@@ -65,11 +84,11 @@
 }
 
 
-input {
+#input {
     transition: 400ms all ease;
 }
 
-input:focus {
+#input:focus {
     box-shadow: 0 0 10px white;
 }
 

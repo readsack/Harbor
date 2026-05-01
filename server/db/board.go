@@ -46,6 +46,16 @@ func GetTeamBoardID(team_id int) (int, error) {
 	return col_id, err
 }
 
+func DeleteItem(card_id int) error {
+	_, err := AppDB.Exec("DELETE FROM items WHERE id=?", card_id)
+	return err
+}
+
+func DeleteColumn(column_id int) error {
+	_, err := AppDB.Exec("DELETE FROM columns WHERE id=?", column_id)
+	return err
+}
+
 func GetBoard(team_id int) (Board, error) {
 	board_id, err := GetTeamBoardID(team_id)
 	if err != nil {

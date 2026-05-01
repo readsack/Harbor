@@ -60,7 +60,7 @@ func GetOrgData(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
 
-	org_d, err := db.GetOrgData(int(u.OrgID.Int64))
+	org_d, err := db.GetOrgData(int(u.OrgID.Int64), u.ID)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -91,9 +91,14 @@ func GetTeamData(w http.ResponseWriter, r *http.Request) {
 	teamID := struct {
 		TeamID int `json:"team_id"`
 	}{
-		0,
+		-1,
 	}
 	json.NewDecoder(r.Body).Decode(&teamID)
+	if teamID.TeamID == -1 {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(w, "Invalid Team ID")
+		return
+	}
 	if db.CheckIfUserInTeam(teamID.TeamID, u.ID) != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprintln(w, "User Doesn't Belong To Team")

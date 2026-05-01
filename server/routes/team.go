@@ -16,7 +16,7 @@ type createTeamReq struct {
 
 type addUserReq struct {
 	UserID int `json:"user_id"`
-	TeamID int `json:"org_id"`
+	TeamID int `json:"team_id"`
 }
 
 func createTeam(w http.ResponseWriter, r *http.Request) {
@@ -48,21 +48,27 @@ func addUserToTeam(w http.ResponseWriter, r *http.Request) {
 	var req addUserReq
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil || req.TeamID == 0 || req.UserID == 0 {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Provided Content is not Valid"))
 		return
 	}
 	org, err := db.GetOrg(int(u.OrgID.Int64))
 	if err != nil || org.CeoID != u.ID {
+		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("User Isn't CEO of The Organization"))
 		return
 	}
 	team, err := db.GetTeamByID(req.TeamID)
 	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("No Team Associated With ID"))
 		return
 	}
+
 	err = db.AddIntoTeam(team.ID, req.UserID)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Internal Server Error"))
 		return
 	}
@@ -70,7 +76,8 @@ func addUserToTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 func createChat(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	r.ParseMultipartForm(1048576)
+
 	valueStr := r.FormValue("team_id")
 	name := r.FormValue("name")
 	teamID, err := strconv.Atoi(valueStr)
@@ -88,8 +95,7 @@ func createChat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getChatHistory(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(1048576)
-	chatKey := r.FormValue("chat-key")
+	chatKey := r.Header.Get("X-Chat-Key")
 	if chatKey == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintln(w, "No Chat Key")
@@ -102,13 +108,16 @@ func getChatHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cData, err := db.GetChatHistory(chatCh)
+	if err != nil {
+		fmt.Println(err)
+	}
 	json.NewEncoder(w).Encode(cData)
 }
 
 func connectToChat(w http.ResponseWriter, r *http.Request) {
+
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
-	r.ParseForm()
 	chatKey := r.Header.Get("X-Chat-Key")
 	if chatKey == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -135,7 +144,7 @@ func connectToChat(w http.ResponseWriter, r *http.Request) {
 	c.Conn = conn
 	c.User = u
 	c.Chat = chatCh
-	c.Send = make(chan chat.Message)
+	c.Send = make(chan db.Message)
 	c.HandleClientConnection()
 
 }
@@ -143,9 +152,9 @@ func connectToChat(w http.ResponseWriter, r *http.Request) {
 func createColumnOrItem(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	u := ctx.Value("user").(*db.User)
-	r.ParseForm()
+	r.ParseMultipartForm(1048576)
 	isCol := r.FormValue("isCol")
-
+	//fmt.Println(isCol)
 	switch isCol {
 	case "1":
 		name := r.FormValue("name")
@@ -176,10 +185,95 @@ func createColumnOrItem(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteColumnOrItem(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(1048576)
+	isCol := r.FormValue("isCol")
+	switch isCol {
+	case "1":
+		valueStr := r.FormValue("col_id")
+		colID, err := strconv.Atoi(valueStr)
+		if err != nil {
+			http.Error(w, "Invalid Column", http.StatusBadRequest)
+			return
+		}
+		err = db.DeleteColumn(colID)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Invalid Column", http.StatusBadRequest)
+			return
+		}
+	case "0":
+		valueStr := r.FormValue("card_id")
+		itemID, err := strconv.Atoi(valueStr)
+		if err != nil {
+			http.Error(w, "Invalid Card", http.StatusBadRequest)
+			return
+		}
+		err = db.DeleteItem(itemID)
+		if err != nil {
+			http.Error(w, "Invalid Card", http.StatusBadRequest)
+			return
+		}
+	default:
+		http.Error(w, "Bad Request Sent", http.StatusBadRequest)
+		return
+	}
+}
+
+func removeUserFromTeam(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	u := ctx.Value("user").(*db.User)
+	var data = struct {
+		TeamID int `json:"team_id"`
+		UserID int `json:"user_id"`
+	}{}
+	defer r.Body.Close()
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		http.Error(w, "Bad Data", http.StatusBadRequest)
+		return
+	}
+	team, _ := db.GetTeamByID(data.TeamID)
+	if u.ID != team.SupID {
+		http.Error(w, "Not Authenticated", http.StatusUnauthorized)
+		return
+	}
+	err = db.RemoveUserFromTeam(data.TeamID, data.UserID)
+	if err != nil {
+		http.Error(w, "Internal Error", http.StatusInternalServerError)
+	}
+}
+func deleteTeam(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	u := ctx.Value("user").(*db.User)
+	var data = struct {
+		TeamID int `json:"team_id"`
+	}{}
+	defer r.Body.Close()
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		http.Error(w, "Bad Data", http.StatusBadRequest)
+		return
+	}
+	team, _ := db.GetTeamByID(data.TeamID)
+	if u.ID != team.SupID {
+		http.Error(w, "Not Authenticated", http.StatusUnauthorized)
+		return
+	}
+	err = db.DeleteTeam(data.TeamID)
+	if err != nil {
+		http.Error(w, "Internal Error", http.StatusInternalServerError)
+	}
+}
+
 func SetupTeamRoutes() {
 	http.HandleFunc("POST /createteam", AuthMiddleware(createTeam))
-	http.HandleFunc("GET /msgs", AuthMiddleware(connectToChat))
+	http.HandleFunc("/msgs", AuthMiddleware(connectToChat))
 	http.HandleFunc("POST /createchat", AuthMiddleware(createChat))
 	http.HandleFunc("POST /addboard", AuthMiddleware(createColumnOrItem))
 	http.HandleFunc("POST /chathistory", AuthMiddleware(getChatHistory))
+	http.HandleFunc("POST /delboard", AuthMiddleware(deleteColumnOrItem))
+	http.HandleFunc("POST /teamadd", AuthMiddleware(addUserToTeam))
+	http.HandleFunc("POST /deleteteam", AuthMiddleware(deleteTeam))
+	http.HandleFunc("POST /removeuser", AuthMiddleware(removeUserFromTeam))
 }

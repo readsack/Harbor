@@ -98,7 +98,7 @@ func AcceptOrDeclineInvite(invite_key string, accept bool) error {
 	return nil
 }
 
-func GetOrgData(org_id int) (OrgData, error) {
+func GetOrgData(org_id int, user_id int) (OrgData, error) {
 
 	orgData := OrgData{
 		Org:     Org{},
@@ -128,12 +128,26 @@ func GetOrgData(org_id int) (OrgData, error) {
 		orgData.Members = append(orgData.Members, *u)
 	}
 	//fmt.Println(orgData.Members)
-	team_rows, err := AppDB.Query("SELECT * FROM teams WHERE org_id=?", org_id)
-	for team_rows.Next() {
+	users_teams, err := AppDB.Query("SELECT team_id from user_team WHERE user_id=?", user_id)
+	for users_teams.Next() {
+		var team_id int
+		err = users_teams.Scan(&team_id)
+		team := AppDB.QueryRow("SELECT * FROM teams WHERE id=?", team_id)
 		u := &Team{}
-		team_rows.Scan(&u.ID, &u.Name, &u.OrgID, &u.SupID)
+		team.Scan(&u.ID, &u.Name, &u.OrgID, &u.SupID)
 		orgData.Teams = append(orgData.Teams, *u)
 	}
 	//orgData.Teams = append(orgData.Teams, )
 	return orgData, nil
+}
+
+func DeleteOrg(org_id int) error {
+	_, err := AppDB.Exec("DELETE FROM orgs WHERE id=?", org_id)
+	return err
+}
+
+func DeleteUserFromOrg(user_id int) error {
+	_, err := AppDB.Exec("UPDATE users SET org_id=? WHERE id=?", nil, user_id)
+	_, err = AppDB.Exec("DELETE FROM user_team WHERE user_id=?", user_id)
+	return err
 }

@@ -61,7 +61,7 @@ func GetTeamData(team_id int) (*TeamData, error) {
 	chats, err := AppDB.Query("SELECT * FROM chats WHERE team_id=?", team_id)
 	for chats.Next() {
 		var c Chat
-		err = chats.Scan(c.ID, c.TeamID, c.Name, c.Key)
+		err = chats.Scan(&c.ID, &c.TeamID, &c.Name, &c.Key)
 		if err != nil {
 			return &teamData, err
 		}
@@ -78,7 +78,19 @@ func GetTeamData(team_id int) (*TeamData, error) {
 		if err != nil {
 			return &teamData, err
 		}
+		u.Password = ""
+		//u.ID = -1
 		teamData.Members = append(teamData.Members, *u)
 	}
 	return &teamData, nil
+}
+
+func DeleteTeam(team_id int) error {
+	_, err := AppDB.Exec("DELETE FROM teams WHERE id=?", team_id)
+	return err
+}
+
+func RemoveUserFromTeam(team_id int, user_id int) error {
+	_, err := AppDB.Exec("DELETE FROM user_team WHERE user_id=? AND team_id=?", user_id, team_id)
+	return err
 }
