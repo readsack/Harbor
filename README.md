@@ -3,6 +3,12 @@ Harbor is a team-management application with support for realtime chatting and k
 
 **NOTE:** IF EVERYTHING SEEMS ZOOMED IN, IT'S BECAUSE I MADE THE UI ON A 2K Res Monitor, and didn't realize that it would look like that until it was too late.
 
+
+
+https://github.com/user-attachments/assets/98e27d98-1d00-432e-87f1-96838b4dce5b
+
+
+
 ## STACK
 1. Backend API: Built With Go, from using the standard HTTP library (no frameworks)
 2. Client Application: Build using Tauri & Rust, with SolidJS serving as the frontend framework
